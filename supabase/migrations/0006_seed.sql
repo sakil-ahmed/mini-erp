@@ -163,7 +163,7 @@ begin
         'unit_cost', 45.00
       )
     ),
-    500.00,   -- discount
+    0,        -- no header discount (keeps avg_cost aligned with Inventory GL)
     10000.00  -- paid
   );
 
@@ -219,7 +219,7 @@ begin
         'unit_cost', 55.00
       )
     ),
-    200.00,
+    0,
     0
   );
 

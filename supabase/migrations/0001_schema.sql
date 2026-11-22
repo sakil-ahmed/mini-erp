@@ -36,30 +36,8 @@ create sequence public.purchase_doc_seq start 1;
 create sequence public.sale_doc_seq start 1;
 
 -- ---------------------------------------------------------------------------
--- Role helper — SECURITY DEFINER so RLS policies can check roles without
--- recursive policy evaluation on profiles.
--- ---------------------------------------------------------------------------
-create or replace function public.has_role(required public.app_role)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.profiles p
-    where p.id = auth.uid()
-      and (p.role = required or p.role = 'admin'::public.app_role)
-  );
-$$;
-
-comment on function public.has_role(public.app_role) is
-  'True if current user has the given role (admin implies all).';
-
--- ---------------------------------------------------------------------------
--- profiles — 1:1 with auth.users; app roles live here, not in JWT custom claims
--- (easier to change roles without forcing re-login / token refresh).
+-- profiles — must exist before has_role() (LANGUAGE sql resolves tables at
+-- CREATE time). 1:1 with auth.users; app roles live here, not JWT claims.
 -- ---------------------------------------------------------------------------
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -94,6 +72,27 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- ---------------------------------------------------------------------------
+-- Role helper — SECURITY DEFINER so RLS policies can check roles without
+-- recursive policy evaluation on profiles. (Defined after profiles table.)
+-- ---------------------------------------------------------------------------
+create or replace function public.has_role(required public.app_role)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles p
+    where p.id = auth.uid()
+      and (p.role = required or p.role = 'admin'::public.app_role)
+  );
+$$;
+
+comment on function public.has_role(public.app_role) is
+  'True if current user has the given role (admin implies all).';
 -- ---------------------------------------------------------------------------
 -- products — stock_qty is denormalized cache; truth is stock_movements (RPC).
 -- ---------------------------------------------------------------------------

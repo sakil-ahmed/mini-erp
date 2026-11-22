@@ -3,10 +3,12 @@ import { Sidebar } from './Sidebar'
 
 export function AppLayout() {
   return (
-    <div className="flex min-h-svh bg-background text-foreground">
+    <div className="flex h-svh overflow-hidden bg-background text-foreground">
       <Sidebar />
-      <main className="flex-1 overflow-auto p-6">
-        <Outlet />
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto p-6">
+        <div className="mx-auto w-full max-w-7xl">
+          <Outlet />
+        </div>
       </main>
     </div>
   )

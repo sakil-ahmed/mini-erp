@@ -120,9 +120,10 @@ begin
     raise exception 'TEST FAIL: expected stock_qty 20.000, got %', v_stock;
   end if;
 
-  -- 2) Moving average: (10*5 + 10*7) / 20 = 6.00
-  if v_avg <> 6.00 then
-    raise exception 'TEST FAIL: expected avg_cost 6.00, got %', v_avg;
+  -- 2) Moving average uses net inv_amount (70 - 10 discount = 60):
+  --    (10*5 + 60) / 20 = 5.50 — must match Inventory GL debit of 60.
+  if v_avg <> 5.50 then
+    raise exception 'TEST FAIL: expected avg_cost 5.50, got %', v_avg;
   end if;
 
   select qty_delta into v_move_qty

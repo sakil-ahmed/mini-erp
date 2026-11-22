@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
+  Package,
+  Users,
   ShoppingCart,
   Truck,
   Warehouse,
@@ -27,6 +29,18 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
     roles: ROUTE_ROLES.dashboard,
     end: true,
+  },
+  {
+    to: '/products',
+    label: 'Products',
+    icon: Package,
+    roles: ROUTE_ROLES.products,
+  },
+  {
+    to: '/parties',
+    label: 'Parties',
+    icon: Users,
+    roles: ROUTE_ROLES.parties,
   },
   { to: '/sales', label: 'Sales', icon: ShoppingCart, roles: ROUTE_ROLES.sales },
   {
@@ -56,12 +70,12 @@ export function Sidebar() {
   const visibleItems = navItems.filter((item) => canAccess(item.roles))
 
   return (
-    <aside className="flex h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4">
+    <aside className="flex h-svh w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-4">
         <span className="text-sm font-semibold tracking-tight">Mini ERP</span>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 p-2">
+      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2">
         {isLoading ? (
           <p className="px-3 py-2 text-xs text-muted-foreground">Loading…</p>
         ) : (
@@ -86,7 +100,7 @@ export function Sidebar() {
         )}
       </nav>
 
-      <div className="space-y-2 border-t border-sidebar-border p-3">
+      <div className="shrink-0 space-y-2 border-t border-sidebar-border p-3">
         <div className="px-1">
           <p className="truncate text-xs font-medium">
             {profile?.full_name ?? 'Signed in'}

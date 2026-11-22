@@ -3,6 +3,8 @@ import type { AppRole } from '@/features/auth/types'
 /** Nav / route access matrix aligned with RLS read rules. */
 export const ROUTE_ROLES = {
   dashboard: ['admin', 'sales', 'purchase', 'accountant'],
+  products: ['admin', 'sales', 'purchase', 'accountant'],
+  parties: ['admin', 'sales', 'purchase', 'accountant'],
   sales: ['admin', 'sales', 'accountant'],
   purchases: ['admin', 'purchase', 'accountant'],
   inventory: ['admin', 'sales', 'purchase', 'accountant'],
