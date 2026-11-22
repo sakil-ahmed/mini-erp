@@ -1,7 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/app/layout/AppLayout'
-import { ProtectedRoute } from '@/app/routes/ProtectedRoute'
-import { LoginPage } from '@/features/auth/pages/LoginPage'
+import {
+  LoginPage,
+  ProtectedRoute,
+  RoleGuard,
+  ROUTE_ROLES,
+} from '@/features/auth'
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { SalesPage } from '@/features/sales/pages/SalesPage'
 import { PurchasesPage } from '@/features/purchases/pages/PurchasesPage'
@@ -16,11 +20,46 @@ export function AppRouter() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="sales" element={<SalesPage />} />
-            <Route path="purchases" element={<PurchasesPage />} />
-            <Route path="inventory" element={<InventoryPage />} />
-            <Route path="accounts" element={<AccountsPage />} />
+            <Route
+              index
+              element={
+                <RoleGuard allow={ROUTE_ROLES.dashboard}>
+                  <DashboardPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="sales"
+              element={
+                <RoleGuard allow={ROUTE_ROLES.sales}>
+                  <SalesPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="purchases"
+              element={
+                <RoleGuard allow={ROUTE_ROLES.purchases}>
+                  <PurchasesPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="inventory"
+              element={
+                <RoleGuard allow={ROUTE_ROLES.inventory}>
+                  <InventoryPage />
+                </RoleGuard>
+              }
+            />
+            <Route
+              path="accounts"
+              element={
+                <RoleGuard allow={ROUTE_ROLES.accounts}>
+                  <AccountsPage />
+                </RoleGuard>
+              }
+            />
           </Route>
         </Route>
 
