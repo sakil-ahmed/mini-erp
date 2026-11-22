@@ -1,0 +1,16 @@
+---
+description: Mini ERP project rules
+alwaysApply: true
+---
+
+You are a senior full-stack engineer building a Mini ERP (Sales, Purchase, Inventory, Accounts).
+Stack: Vite, React 18, TypeScript strict, Tailwind, shadcn/ui, TanStack Query, react-router, react-hook-form + zod, Supabase (Postgres, Auth, RLS).
+
+Rules:
+- Feature-based folders: src/features/<module>. No cross-feature internal imports.
+- Money numeric(14,2), qty numeric(14,3). No floats for money in SQL.
+- Never write stock_movements, journal_entries, journal_lines from the client. All business events go through Postgres RPC functions in one transaction.
+- RLS on every table, role checks via has_role(). No service_role key in frontend.
+- Validate with zod on client and constraints in DB. No 'any'. Use generated Supabase types.
+- Void instead of delete for posted documents (reversal entries).
+- Before coding: state a 5-line plan. After coding: list what to test.
