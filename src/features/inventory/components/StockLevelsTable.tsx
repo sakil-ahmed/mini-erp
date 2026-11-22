@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -13,9 +14,15 @@ import type { StockLevelRow } from '@/features/inventory/types'
 
 type StockLevelsTableProps = {
   rows: StockLevelRow[]
+  canAdjust?: boolean
+  onAdjust?: (row: StockLevelRow) => void
 }
 
-export function StockLevelsTable({ rows }: StockLevelsTableProps) {
+export function StockLevelsTable({
+  rows,
+  canAdjust,
+  onAdjust,
+}: StockLevelsTableProps) {
   if (rows.length === 0) {
     return (
       <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
@@ -35,7 +42,7 @@ export function StockLevelsTable({ rows }: StockLevelsTableProps) {
             <TableHead className="text-right">Avg cost</TableHead>
             <TableHead className="text-right">Stock value</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="text-right">History</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -73,12 +80,24 @@ export function StockLevelsTable({ rows }: StockLevelsTableProps) {
                 </div>
               </TableCell>
               <TableCell className="text-right">
-                <Link
-                  to={`/inventory/${row.id}/movements`}
-                  className="text-sm text-primary underline-offset-2 hover:underline"
-                >
-                  Movements
-                </Link>
+                <div className="flex items-center justify-end gap-2">
+                  {canAdjust && row.is_active ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onAdjust?.(row)}
+                    >
+                      Adjust
+                    </Button>
+                  ) : null}
+                  <Link
+                    to={`/inventory/${row.id}/movements`}
+                    className="text-sm text-primary underline-offset-2 hover:underline"
+                  >
+                    Movements
+                  </Link>
+                </div>
               </TableCell>
             </TableRow>
           ))}

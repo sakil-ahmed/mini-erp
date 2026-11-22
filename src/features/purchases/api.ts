@@ -173,6 +173,22 @@ export async function voidPurchaseRpc(id: string) {
   if (error) throw new Error(friendlyRpcError(error))
 }
 
+export async function paySupplierRpc(params: {
+  supplierId: string
+  amount: number
+  method: 'cash' | 'bank'
+}) {
+  const { data, error } = await supabase.rpc('record_payment', {
+    p_party: params.supplierId,
+    p_amount: params.amount,
+    p_direction: 'disbursement',
+    p_method: params.method,
+  })
+
+  if (error) throw new Error(friendlyRpcError(error))
+  return String(data)
+}
+
 export function usePurchasesQuery(filters: PurchaseListFilters) {
   return useQuery({
     queryKey: purchaseKeys.list(filters),
@@ -230,6 +246,20 @@ export function useVoidPurchaseMutation() {
         qc.invalidateQueries({ queryKey: queryKeys.products }),
         qc.invalidateQueries({ queryKey: queryKeys.stock }),
         qc.invalidateQueries({ queryKey: queryKeys.dashboard }),
+      ])
+    },
+  })
+}
+
+export function usePaySupplierMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: paySupplierRpc,
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.purchases }),
+        qc.invalidateQueries({ queryKey: queryKeys.dashboard }),
+        qc.invalidateQueries({ queryKey: queryKeys.accounts }),
       ])
     },
   })

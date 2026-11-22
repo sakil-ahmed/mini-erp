@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { PAGE_SIZE, pageRange } from '@/shared/lib/pagination'
 import { queryKeys } from '@/shared/lib/query-keys'
 import { friendlyRpcError } from '@/shared/lib/rpc-error'
 import { roundMoney } from '@/features/inventory/lib/math'
+import type { StockAdjustValues } from '@/features/inventory/schemas'
 import type {
   ProductSummary,
   StockLevelRow,
@@ -163,6 +164,52 @@ export function useMovementsQuery(
       listMovements({ productId: productId!, page, kind }),
     enabled: Boolean(productId),
     placeholderData: (prev) => prev,
+  })
+}
+
+export async function adjustStockRpc(
+  productId: string,
+  values: StockAdjustValues,
+) {
+  const unitCost =
+    values.qty_delta > 0 &&
+    typeof values.unit_cost === 'number' &&
+    Number.isFinite(values.unit_cost)
+      ? values.unit_cost
+      : null
+
+  const { data, error } = await supabase.rpc('adjust_stock', {
+    p_product: productId,
+    p_qty_delta: values.qty_delta,
+    p_unit_cost: unitCost,
+    p_note: values.note?.trim() ? values.note.trim() : null,
+  })
+
+  if (error) throw new Error(friendlyRpcError(error))
+  return String(data)
+}
+
+export function useAdjustStockMutation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      productId,
+      values,
+    }: {
+      productId: string
+      values: StockAdjustValues
+    }) => adjustStockRpc(productId, values),
+    onSuccess: async (_data, vars) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.stock }),
+        qc.invalidateQueries({ queryKey: queryKeys.products }),
+        qc.invalidateQueries({ queryKey: queryKeys.dashboard }),
+        qc.invalidateQueries({ queryKey: queryKeys.accounts }),
+        qc.invalidateQueries({
+          queryKey: inventoryKeys.product(vars.productId),
+        }),
+      ])
+    },
   })
 }
 

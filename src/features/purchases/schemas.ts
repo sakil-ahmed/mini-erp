@@ -47,6 +47,13 @@ export const purchaseFormSchema = z
 export type PurchaseFormValues = z.infer<typeof purchaseFormSchema>
 export type PurchaseLineValues = z.infer<typeof purchaseLineSchema>
 
+export const paySupplierSchema = z.object({
+  amount: z.number().gt(0, 'Amount must be > 0'),
+  method: z.enum(['cash', 'bank']),
+})
+
+export type PaySupplierValues = z.infer<typeof paySupplierSchema>
+
 export function roundMoney(n: number) {
   return Math.round((n + Number.EPSILON) * 100) / 100
 }

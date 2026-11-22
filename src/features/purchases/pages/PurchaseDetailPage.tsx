@@ -12,18 +12,25 @@ import {
 } from '@/components/ui/table'
 import { useRole } from '@/features/auth'
 import {
+  usePaySupplierMutation,
   usePurchaseQuery,
   useVoidPurchaseMutation,
 } from '@/features/purchases/api'
+import { PaySupplierDialog } from '@/features/purchases/components/PaySupplierDialog'
 import { PurchaseTotals } from '@/features/purchases/components/PurchaseTotals'
+import type { PaySupplierValues } from '@/features/purchases/schemas'
 import { formatMoney, formatQty } from '@/shared/lib/money'
 
 export function PurchaseDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { isAdmin } = useRole()
+  const { isAdmin, hasRole } = useRole()
+  const canPay = isAdmin || hasRole('accountant')
   const detail = usePurchaseQuery(id)
   const voidPurchase = useVoidPurchaseMutation()
+  const paySupplier = usePaySupplierMutation()
   const [voidError, setVoidError] = useState<string | null>(null)
+  const [payOpen, setPayOpen] = useState(false)
+  const [payError, setPayError] = useState<string | null>(null)
 
   if (detail.isLoading) {
     return <p className="text-sm text-muted-foreground">Loading purchase…</p>
@@ -61,6 +68,25 @@ export function PurchaseDetailPage() {
     }
   }
 
+  const onPay = async (values: PaySupplierValues) => {
+    setPayError(null)
+    if (values.amount > due) {
+      setPayError(`Amount cannot exceed due (${due.toFixed(2)})`)
+      return
+    }
+    try {
+      await paySupplier.mutateAsync({
+        supplierId: purchase.supplier_id,
+        amount: values.amount,
+        method: values.method,
+      })
+      setPayOpen(false)
+      await detail.refetch()
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : 'Payment failed')
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -79,10 +105,21 @@ export function PurchaseDetailPage() {
             {purchase.doc_date} · {purchase.supplier_name}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" asChild>
             <Link to="/purchases">Back</Link>
           </Button>
+          {canPay && purchase.status === 'posted' && due > 0 ? (
+            <Button
+              type="button"
+              onClick={() => {
+                setPayError(null)
+                setPayOpen(true)
+              }}
+            >
+              Pay supplier
+            </Button>
+          ) : null}
           {isAdmin && purchase.status === 'posted' ? (
             <Button
               type="button"
@@ -144,6 +181,17 @@ export function PurchaseDetailPage() {
           due={due}
         />
       </div>
+
+      <PaySupplierDialog
+        open={payOpen}
+        due={due}
+        submitting={paySupplier.isPending}
+        error={payError}
+        onOpenChange={setPayOpen}
+        onSubmit={(values) => {
+          void onPay(values)
+        }}
+      />
     </div>
   )
 }
